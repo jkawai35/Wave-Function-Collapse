@@ -4,5 +4,9 @@ class Cell extends Phaser.Scene {
         super('Cell')
         this.entropy = entropy;
         this.possibilities = possibilities
+        this.x = x
+        this.y = y
+        this.neighbors = []
+        this.collapsed = false
     }
 }
