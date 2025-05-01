@@ -1,32 +1,38 @@
+window.onload = function () {
+    let config = {
+        type: Phaser.AUTO,
+        parent: 'game-container',
+        render: {
+            pixelArt: true
+        },
+        width: 320,
+        height: 240,
+        zoom: 2,
+        physics: {
+            default: "arcade",
+            arcade: {
+                debug: false
+            }
+        },
+        scene: [ Load, Cell, Map ]
+    };
 
-let config = {
-    type: Phaser.AUTO,
-    render: {
-        pixelArt: true
-    },
-    width: 320,
-    height: 240,
-    zoom: 2,
-    physics: {
-        default: "arcade",
-        arcade: {
-            debug: false
-        }
-    },
-    scene: [ Load, Cell, Map ]
-}
+    new Phaser.Game(config);
+};
 
 // define game
-const game = new Phaser.Game(config)
 
 // define globals
-let centerX = game.config.width / 2;
-let centerY = game.config.height / 2;
-let game_width = game.config.width;
-let game_height = game.config.height;
+let map_height = 15
+let map_width = 20
 
-let keyR;
-let keyPeriod;
-let keyComma;
-let map;
+let keyR
+let keyS
+let map
 let waveTable
+let tileData
+let ground
+let decoration
+let defaultTable
+let tileset
+let started = false

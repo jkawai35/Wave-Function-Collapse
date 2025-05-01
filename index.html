@@ -4,12 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WFC Tiny Town</title>
-</head>
-<body>
+    <style>
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #info-text {
+            margin-top: 20px;
+            font-family: sans-serif;
+            text-align: center;
+        }
+    </style>
+
+
     <script src="./lib/phaser.js"></script>
     <script src="./src/load.js"></script>
     <script src="./src/cell.js"></script>
     <script src="./src/map.js"></script>
     <script src="./src/main.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <label for="Controls">Controls:</label>
+    <p>Press the S key to start WFC</p>
+    <p>Press the R key to regenerate current map</p>
+
 </body>
 </html>
