@@ -43,8 +43,8 @@ class Map extends Phaser.Scene{
     update(){
         if (Phaser.Input.Keyboard.JustDown(keyS)){
             if (!started){
-                //this.WFC(waveTable, tileData, map_width, map_height, ground)
-                this.WFCLexical(waveTable, tileData, map_width, map_height, ground)
+                this.WFC(waveTable, tileData, map_width, map_height, ground)
+                //this.WFCLexical(waveTable, tileData, map_width, map_height, ground)
                 this.placeDecorations(map_width, map_height, decoration)
                 started = true
             }
