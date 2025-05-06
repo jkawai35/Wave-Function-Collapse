@@ -7,6 +7,9 @@ class Map extends Phaser.Scene{
 
         keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
         keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R)
+        keyL = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L)
+        keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+
 
         map = this.make.tilemap({ tileWidth: 16, tileHeight: 16, width: 20, height: 15 });
 
@@ -44,18 +47,52 @@ class Map extends Phaser.Scene{
         if (Phaser.Input.Keyboard.JustDown(keyS)){
             if (!started){
                 this.WFC(waveTable, tileData, map_width, map_height, ground)
-                //this.WFCLexical(waveTable, tileData, map_width, map_height, ground)
                 this.placeDecorations(map_width, map_height, decoration)
                 started = true
+                WFCselection = "entropy"
+            }
+            
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(keyL)){
+            if (!started){
+                this.WFCLexical(waveTable, tileData, map_width, map_height, ground)
+                this.placeDecorations(map_width, map_height, decoration)
+                started = true
+                WFCselection = "lexical"
+            }
+            
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(keyD)){
+            if (!started){
+                this.WFCRandom(waveTable, tileData, map_width, map_height, ground)
+                this.placeDecorations(map_width, map_height, decoration)
+                started = true
+                WFCselection = "random"
             }
             
         }
 
         if (Phaser.Input.Keyboard.JustDown(keyR)){
-            this.clearDecorations(decoration, map_width, map_height)
-            this.initializeWaveTable(waveTable, defaultTable, map_width, map_height)
-            this.WFC(waveTable, tileData, map_width, map_height, ground)
-            this.placeDecorations(map_width, map_height, decoration)
+            if (WFCselection == "entropy"){
+                this.clearDecorations(decoration, map_width, map_height)
+                this.initializeWaveTable(waveTable, defaultTable, map_width, map_height)
+                this.WFC(waveTable, tileData, map_width, map_height, ground)
+                this.placeDecorations(map_width, map_height, decoration)
+            }
+            if (WFCselection == "lexical"){
+                this.clearDecorations(decoration, map_width, map_height)
+                this.initializeWaveTable(waveTable, defaultTable, map_width, map_height)
+                this.WFCLexical(waveTable, tileData, map_width, map_height, ground)
+                this.placeDecorations(map_width, map_height, decoration)
+            }
+            if (WFCselection == "random"){
+                this.clearDecorations(decoration, map_width, map_height)
+                this.initializeWaveTable(waveTable, defaultTable, map_width, map_height)
+                this.WFCRandom(waveTable, tileData, map_width, map_height, ground)
+                this.placeDecorations(map_width, map_height, decoration)
+            }
         }
     }
     
@@ -298,47 +335,158 @@ class Map extends Phaser.Scene{
     }
 
     WFCLexical(waveTable, tileData, width, height, layer) {
+ 
+        // Place start tile
         const grasstiles = [0, 1, 2]
         const startTileIndex = grasstiles[Math.floor(Math.random() * grasstiles.length)]
-    
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                const current = waveTable[y][x];
-    
-                // If already collapsed (from previous propagation), skip
-                if (current.collapsed) continue;
-    
-                // Collapse first tile explicitly
-                if (x === 0 && y === 0) {
-                    current.possibilities = [startTileIndex];
-                    current.entropy = 0;
-                    current.collapsed = true;
-                    layer.putTileAt(startTileIndex, x, y);
-                    this.propagate(waveTable, tileData, current, layer);
-                    continue;
-                }
-    
-                // Update current.possibilities based on any previous propagations
-                if (current.possibilities.length === 0) {
-                    console.warn("Contradiction at", x, y);
-                    return;
-                }
-    
-                // Collapse this cell randomly from its (now updated) possibilities
-                const tileIndex = current.possibilities[Math.floor(Math.random() * current.possibilities.length)];
-                current.possibilities = [tileIndex];
-                current.entropy = 0;
-                current.collapsed = true;
-                layer.putTileAt(tileIndex, x, y);
-    
-                // Propagate constraints to neighbors
-                this.propagate(waveTable, tileData, current, layer);
+        const startX = Math.floor(Math.random() * width)
+        const startY = Math.floor(Math.random() * height)
+
+        //console.log("starting index: " + startTileIndex)
+        //console.log(startX, startY)
+        const startCell = waveTable[startY][startX]
+        startCell.possibilities = [startTileIndex]
+        startCell.entropy = 0
+        startCell.collapsed = true
+        layer.putTileAt(startTileIndex, startX, startY)
+        this.propagate(waveTable, tileData, startCell)
+
+        let current = startCell
+        
+        // Keep track of how many cells have been collapsed to avoid infinite loops
+        let currentTries = 1;
+        const maxTries = width * height;
+
+        while (currentTries <= maxTries) {
+
+            let nextCell = this.findLexicalCell(waveTable);
+            if (!nextCell) {
+                break
             }
-        }
-    
-        this.checkAllCollapsed(waveTable, width, height);
+
+            // Collapse: pick one of the possible tiles
+            const tileIndex = this.weightedPick(nextCell.possibilities, tileData)
+            nextCell.possibilities = [tileIndex]
+            nextCell.entropy = 0
+            currentTries++
+
+            // Place on map
+            layer.putTileAt(tileIndex, nextCell.x, nextCell.y);
+            nextCell.collapsed = true
+
+
+            // Propagate constraints from this new tile
+            //this.propagate(waveTable, tileData, nextCell);
+
+            let success = this.propagate(waveTable, tileData, nextCell, layer);
+            if (!success) {
+                // Remove the tried tile from possibilities
+                this.initializeWaveTable(waveTable, defaultTable, width, height)
+                
+                const newX = Math.floor(Math.random() * width)
+                const newY = Math.floor(Math.random() * height)
+                const newTile = grasstiles[Math.floor(Math.random() * grasstiles.length)]
+                
+                const newStart = waveTable[newY][newX]
+                newStart.possibilities = [newTile]
+                newStart.entropy = 0
+                newStart.collapsed = true
+
+                layer.putTileAt(newTile, newX, newY)
+                this.propagate(waveTable, tileData, newStart, layer)
+
+                current = newStart
+
+                currentTries++
+
+                continue
+            }
+
+            
+            // Move on
+            current = nextCell;
+            //console.log(current.neighbors)
+
+        }    
+        this.checkAllCollapsed(waveTable, width, height)
     }
     
+    WFCRandom(waveTable, tileData, width, height, layer) {
+ 
+        // Place start tile
+        const grasstiles = [0, 1, 2]
+        const startTileIndex = grasstiles[Math.floor(Math.random() * grasstiles.length)]
+        const startX = Math.floor(Math.random() * width)
+        const startY = Math.floor(Math.random() * height)
+
+        //console.log("starting index: " + startTileIndex)
+        //console.log(startX, startY)
+        const startCell = waveTable[startY][startX]
+        startCell.possibilities = [startTileIndex]
+        startCell.entropy = 0
+        startCell.collapsed = true
+        layer.putTileAt(startTileIndex, startX, startY)
+        this.propagate(waveTable, tileData, startCell)
+
+        let current = startCell
+        
+        // Keep track of how many cells have been collapsed to avoid infinite loops
+        let currentTries = 1;
+        const maxTries = width * height;
+
+        while (currentTries <= maxTries) {
+
+            let nextCell = this.findRandomCell(waveTable);
+            if (!nextCell) {
+                break
+            }
+
+            // Collapse: pick one of the possible tiles
+            const tileIndex = this.weightedPick(nextCell.possibilities, tileData)
+            nextCell.possibilities = [tileIndex]
+            nextCell.entropy = 0
+            currentTries++
+
+            // Place on map
+            layer.putTileAt(tileIndex, nextCell.x, nextCell.y);
+            nextCell.collapsed = true
+
+
+            // Propagate constraints from this new tile
+            //this.propagate(waveTable, tileData, nextCell);
+
+            let success = this.propagate(waveTable, tileData, nextCell, layer);
+            if (!success) {
+                // Remove the tried tile from possibilities
+                this.initializeWaveTable(waveTable, defaultTable, width, height)
+                
+                const newX = Math.floor(Math.random() * width)
+                const newY = Math.floor(Math.random() * height)
+                const newTile = grasstiles[Math.floor(Math.random() * grasstiles.length)]
+                
+                const newStart = waveTable[newY][newX]
+                newStart.possibilities = [newTile]
+                newStart.entropy = 0
+                newStart.collapsed = true
+
+                layer.putTileAt(newTile, newX, newY)
+                this.propagate(waveTable, tileData, newStart, layer)
+
+                current = newStart
+
+                currentTries++
+
+                continue
+            }
+
+            
+            // Move on
+            current = nextCell;
+            //console.log(current.neighbors)
+
+        }    
+        this.checkAllCollapsed(waveTable, width, height)
+    }
 
     placeDecorations(width, height){
         const possibleDecorations = [27, 28, 29, 94, 106]

@@ -28,6 +28,8 @@ let map_width = 20
 
 let keyR
 let keyS
+let keyL
+let keyD
 let map
 let waveTable
 let tileData
@@ -36,3 +38,4 @@ let decoration
 let defaultTable
 let tileset
 let started = false
+let WFCselection
