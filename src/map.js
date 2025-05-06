@@ -107,6 +107,34 @@ class Map extends Phaser.Scene{
         return possibleNextCell;
     } 
     
+    findLexicalCell(waveTable) {
+        for (let row of waveTable) {
+            for (let cell of row) {
+                if (!cell.collapsed && cell.entropy > 1) {
+                    return cell;
+                }
+            }
+        }
+        return null;
+    }
+
+    findRandomCell(waveTable) {
+        const candidates = [];
+        for (let row of waveTable) {
+            for (let cell of row) {
+                if (!cell.collapsed && cell.entropy > 1) {
+                    candidates.push(cell);
+                }
+            }
+        }
+        if (candidates.length > 0) {
+            const index = Math.floor(Math.random() * candidates.length);
+            return candidates[index];
+        }
+        return null;
+    }
+
+
     
     propagate(waveTable, tileData, collapsedCell, layer){
         const queue = [collapsedCell]
