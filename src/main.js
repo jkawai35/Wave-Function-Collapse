@@ -39,3 +39,6 @@ let defaultTable
 let tileset
 let started = false
 let WFCselection
+let wfcActive = false
+let wfcTimer = 0
+let wfcDelay = 100
