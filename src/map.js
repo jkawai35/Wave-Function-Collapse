@@ -10,6 +10,8 @@ class Map extends Phaser.Scene{
         keyL = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L)
         keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
+        keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E)
+
 
 
         map = this.make.tilemap({ tileWidth: 16, tileHeight: 16, width: 20, height: 15 });
@@ -74,16 +76,47 @@ class Map extends Phaser.Scene{
 
         if (Phaser.Input.Keyboard.JustDown(keyW)){
             if (!started){
+                const startTime = performance.now()
+
                 this.OGWFC(waveTable, tileData, map_width, map_height, ground)
                 WFCselection = "ogwfc"
+
+                const endTime = performance.now()
+                console.log("OG WFC ran in: " + ((endTime - startTime) / 1000) + " seconds")
+            }
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(keyE)){
+            if (!started){
+                const startTime = performance.now()
+                
+                //PUT FASTER WFC FUNCTION HERE
+                WFCselection = "fastwfc"
+
+                const endTime = performance.now()
+                console.log("Faster WFC ran in: " + ((endTime - startTime) / 1000) + " seconds")
             }
         }
 
         if (Phaser.Input.Keyboard.JustDown(keyR)){
             if (WFCselection == "ogwfc") {
+                const startTime = performance.now()
+
                 this.clearDecorations(decoration, map_width, map_height)
                 this.initializeWaveTable(waveTable, defaultTable, map_width, map_height)
                 this.OGWFC(waveTable, tileData, map_width, map_height, ground)
+
+                const endTime = performance.now()
+                console.log("OG WFC ran in: " + ((endTime - startTime) / 1000) + " seconds")
+            }else if (WFCselection == "fastwfc"){
+                const startTime = performance.now()
+
+                this.clearDecorations(decoration, map_width, map_height)
+                this.initializeWaveTable(waveTable, defaultTable, map_width, map_height)
+                //PUT FAST WFC FUNCTION HERE
+
+                const endTime = performance.now()
+                console.log("OG WFC ran in: " + ((endTime - startTime) / 1000) + " seconds")
             }
             else {
                 this.clearDecorations(decoration, map_width, map_height)

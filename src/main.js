@@ -31,6 +31,7 @@ let keyS
 let keyL
 let keyD
 let keyW
+let keyE
 let map
 let waveTable
 let tileData
